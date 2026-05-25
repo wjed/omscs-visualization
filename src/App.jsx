@@ -329,9 +329,9 @@ function SemCard({ sem, onCourseClick }) {
       <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
         {courses.map(c => <CourseCard key={c.id} course={c} onClick={onCourseClick} />)}
       </div>
-      {sem.index === 2 && (
+      {sem.index === 3 && (
         <div style={{ margin: '0 20px 20px', padding: '12px 16px', borderRadius: 10, fontSize: 13, lineHeight: 1.5, background: '#fff7f5', border: `1px solid ${C.orange}40`, color: C.text }}>
-          <strong style={{ color: C.orange }}>Consider moving CS6795</strong> to another semester. CS6601 alone averages 23 hrs / wk.
+          <strong style={{ color: C.orange }}>Solo course by design.</strong> CS6601 averages 23 hrs/wk. Budget 30+ hrs/wk for the first month.
         </div>
       )}
     </div>
@@ -470,16 +470,16 @@ function Analytics() {
 // ── Risk Flags ─────────────────────────────────────────────────────────────────
 function RiskFlags({ onCourseClick }) {
   const flags = [
-    { id: 'CS6150', level: 'high', title: 'CS6150 — Computing for Good',
-      note: 'Only offered about 6 times in 12 semesters. Has disappeared from the schedule before. Keep CS6261 or CS6250 ready as drop-in substitutes.' },
-    { id: 'CS8803-O23', level: 'medium', title: 'CS8803-O23 — Modern Internet Research Methods',
-      note: 'Only 4 semesters of offering history. A Fall pattern has been observed but is not guaranteed. Verify availability well before Fall 2027 registration.' },
-    { id: 'PUBP8823', level: 'medium', title: 'PUBP8823 — Geopolitics of Cybersecurity',
-      note: 'Only 4 semesters since its Spring 2023 debut. Spring availability looks consistent but there is not enough data to be confident. Have a backup elective ready.' },
-    { id: 'CS6601', level: 'high', title: 'Spring 2027 Workload Warning', noLink: true,
-      note: 'CS6601 alone averages 23 hrs/wk. Add CS6795 at 8 hrs/wk and you are looking at 31 hrs/wk while working full-time. Strongly consider moving CS6795 to a lighter semester.' },
-    { id: 'CS6601', level: 'high', title: 'CS6601 — Take This Course Alone',
-      note: 'This is statistically the hardest course in OMSCS. If you find yourself struggling after week 3, drop early and protect your GPA. Do not pair it with any other course.' },
+    { id: 'CS6601', level: 'high', title: 'CS6601: Budget 30+ hrs/wk in Summer 2027', noLink: false,
+      note: 'This is statistically the hardest course in OMSCS. You are correctly taking it alone in summer. Budget 30 or more hours per week for the first four weeks. If you are struggling after week 3, drop early and protect your GPA.' },
+    { id: 'CS6150', level: 'high', title: 'CS6150: Computing for Good has a spotty schedule',
+      note: 'Only offered about 6 times across 12 semesters. Has disappeared from the schedule before with no warning. Keep CS6261 or CS6250 ready as drop-in substitutes for Fall 2027.' },
+    { id: 'CS8803-O23', level: 'medium', title: 'CS8803-O23: Modern Internet Research Methods is newer',
+      note: 'Only 4 semesters of offering history. A Fall pattern has been observed but is not guaranteed. Verify availability well before Fall 2027 registration opens.' },
+    { id: 'PUBP8823', level: 'medium', title: 'PUBP8823: Geopolitics of Cybersecurity is newer',
+      note: 'Only 4 semesters since its Spring 2023 debut. Spring availability looks consistent but there is not enough data to be confident. Have a backup elective ready for Spring 2028.' },
+    { id: 'CS6300', level: 'medium', title: 'CS6300: Java and Android needed before Fall 2026', noLink: false,
+      note: 'Software Development Process requires Android and Java development. If you are not comfortable with Java, spend a few weeks on it before the semester starts. Being the team lead on the group project is strongly recommended.' },
   ];
 
   const styles = {
@@ -532,15 +532,16 @@ function Background() {
     { label: 'Real-world context', sub: 'Enriches ethics, policy, and research courses with grounded examples' },
   ];
   const gaps = [
-    { label: 'Algorithms and data structures', action: 'Study before CS6601 in Spring 2027' },
-    { label: 'Python proficiency', action: 'Must be solid before Fall 2026 starts' },
-    { label: 'Probability and statistics', action: 'Review before CS6601' },
-    { label: 'No formal ML or math background', action: 'CS6601 will expose this hard' },
-    { label: 'Academic writing', action: 'KBAI and Cog Sci are writing-heavy, start practicing now' },
+    { label: 'Java and Android basics', action: 'Needed for CS6300 starting Fall 2026' },
+    { label: 'Python proficiency', action: 'Must be solid before Fall 2026 and critical by Summer 2027' },
+    { label: 'Algorithms and data structures', action: 'Study hard before CS6601 in Summer 2027' },
+    { label: 'Probability and statistics', action: 'Review before CS6601 in Summer 2027' },
+    { label: 'Academic writing', action: 'KBAI and Cog Sci are writing-heavy. CS6603 in Fall 2026 is good practice' },
   ];
   const study = [
+    { subject: 'Java Basics', resource: '"Head First Java" or the free MOOC.fi Java Programming course — needed for CS6300' },
     { subject: 'Python', resource: '"Automate the Boring Stuff with Python" and LeetCode Easy problems' },
-    { subject: 'Algorithms', resource: 'MIT 6.006 lectures on YouTube (free)' },
+    { subject: 'Algorithms', resource: 'MIT 6.006 lectures on YouTube (free) — essential before Summer 2027' },
     { subject: 'Probability', resource: 'Khan Academy Statistics and 3Blue1Brown "Essence of" series' },
     { subject: 'AI Concepts', resource: 'First 3 chapters of Russell and Norvig (free preview online)' },
   ];
@@ -740,7 +741,7 @@ function Header({ tab, setTab }) {
                 OMSCS Journey
               </h1>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>
-                M.S. Computer Science — AI Specialization
+                M.S. Computer Science: AI Specialization
               </p>
             </div>
           </div>
