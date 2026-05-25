@@ -1,118 +1,130 @@
 @import "tailwindcss";
 
-/* Georgia Tech Official Color Palette */
 :root {
-  --gt-navy:       #003057;
-  --gt-gold:       #B3A369;
-  --gt-gold-med:   #A4925A;
-  --gt-gold-dark:  #857437;
-  --gt-buzz-gold:  #EAAA00;
-  --gt-gray:       #54585A;
-  --gt-pi-mile:    #D6DBD4;
-  --gt-diploma:    #F9F6E5;
-  --gt-bold-blue:  #3A5DAE;
-  --gt-teal:       #008C95;
-  --gt-orange:     #E04F39;
-  --gt-purple:     #5F249F;
-  --gt-lime:       #A4D233;
-  --gt-brutal-red: #8B0000;
+  --navy:      #003057;
+  --gold:      #B3A369;
+  --gold-dark: #857437;
+  --buzz:      #EAAA00;
+  --gray:      #54585A;
+  --teal:      #008C95;
+  --orange:    #E04F39;
+  --blue:      #3A5DAE;
+  --lime:      #A4D233;
+  --red:       #8B0000;
+  --purple:    #5F249F;
+  --page-bg:   #F0F2F5;
+  --card-bg:   #FFFFFF;
+  --border:    rgba(0,0,0,0.07);
+  --text:      #0f1c2e;
+  --text-mid:  #4a5568;
+  --text-soft: #8a96a3;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: #f4f4f4;
-  color: var(--gt-navy);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4 { font-family: 'Georgia', 'Times New Roman', serif; }
+h1, h2, h3, h4 {
+  font-family: 'Playfair Display', Georgia, serif;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #e8e8e8; }
-::-webkit-scrollbar-thumb { background: var(--gt-gold); border-radius: 3px; }
-
-/* Card */
+/* Cards */
 .card {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
-  border: 1px solid rgba(0,0,0,0.06);
+  background: var(--card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.05);
 }
 
 /* Course card hover */
 .course-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .course-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0,48,87,0.14);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 48, 87, 0.12);
 }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #e8eaed; }
+::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
 
 /* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,30,60,0.55);
+  background: rgba(10, 20, 40, 0.6);
   z-index: 50;
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
 }
 .modal-drawer {
-  width: min(580px, 100vw);
+  width: min(600px, 100vw);
   height: 100vh;
-  background: #ffffff;
-  border-left: 3px solid var(--gt-gold);
+  background: #fff;
+  border-left: 1px solid var(--border);
   overflow-y: auto;
-  animation: slideIn 0.22s ease-out;
+  animation: slideIn 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 @keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
 }
 
-/* Nav */
+/* Nav tabs */
 .nav-tab {
-  transition: color 0.15s, border-color 0.15s;
-  padding: 0 20px;
-  height: 48px;
-  display: flex;
+  padding: 0 22px;
+  height: 46px;
+  display: inline-flex;
   align-items: center;
-  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
   font-weight: 600;
-  color: rgba(255,255,255,0.7);
-  border-bottom: 3px solid transparent;
-  white-space: nowrap;
-  cursor: pointer;
-  background: none;
+  letter-spacing: 0.02em;
+  color: rgba(255,255,255,0.55);
+  border-bottom: 2px solid transparent;
   border-top: none;
   border-left: none;
   border-right: none;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
 }
-.nav-tab:hover { color: #fff; }
+.nav-tab:hover { color: rgba(255,255,255,0.9); }
 .nav-tab.active {
-  color: var(--gt-buzz-gold);
-  border-bottom-color: var(--gt-buzz-gold);
+  color: var(--buzz);
+  border-bottom-color: var(--buzz);
 }
 
 /* Difficulty dots */
 .diff-dot {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
-/* Section fade */
+/* Fade in */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.fade-up { animation: fadeUp 0.3s ease-out; }
+.fade-up { animation: fadeUp 0.28s ease-out; }
 
 /* Print */
 @media print {
