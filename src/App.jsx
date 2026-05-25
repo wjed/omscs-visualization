@@ -15,7 +15,7 @@ const C = {
   buzz:    '#EAAA00', gray:   '#54585A', teal:   '#008C95',
   orange:  '#E04F39', blue:   '#3A5DAE', lime:   '#A4D233',
   red:     '#8B0000', purple: '#5F249F', white:  '#ffffff',
-  bg:      '#F0F2F5', text:   '#0f1c2e', mid:    '#4a5568', soft:   '#8a96a3',
+  bg:      '#E8EDF5', text:   '#0f1c2e', mid:    '#4a5568', soft:   '#8a96a3',
   border:  'rgba(0,0,0,0.07)',
 };
 
@@ -172,7 +172,7 @@ function CourseModal({ course, onClose }) {
               { icon: BookOpen, label: 'credit hours', value: course.creditHours, color: C.navy },
               { icon: Star, label: 'community rating', value: course.communityRating.toFixed(1), color: C.buzz },
             ].map(({ icon: Icon, label, value, color }) => (
-              <div key={label} style={{ borderRadius: 12, padding: '14px 16px', background: C.bg, textAlign: 'center' }}>
+              <div key={label} style={{ borderRadius: 12, padding: '14px 16px', background: '#f1f5fb', border: '1px solid rgba(0,48,87,0.08)', textAlign: 'center' }}>
                 <Icon size={16} color={color} style={{ margin: '0 auto 6px' }} />
                 <p style={{ fontSize: 22, fontWeight: 800, color: C.navy, lineHeight: 1 }}>{value}</p>
                 <p style={{ fontSize: 11, color: C.soft, marginTop: 4 }}>{label}</p>
@@ -266,7 +266,7 @@ function CourseCard({ course, onClick }) {
   return (
     <div className="course-card card" onClick={() => onClick(course)}
       role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && onClick(course)}
-      style={{ borderLeft: `4px solid ${color}`, padding: '16px 18px' }}>
+      style={{ borderLeft: `4px solid ${color}`, padding: '16px 18px', background: `linear-gradient(135deg, ${color}0d 0%, #fff 55%)` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: C.gold, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 3 }}>
@@ -305,7 +305,7 @@ function SemCard({ sem, onCourseClick }) {
 
   return (
     <div className="card" style={{ borderTop: `4px solid ${lc}`, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${C.border}`, background: `linear-gradient(135deg, ${lc}0a 0%, transparent 65%)` }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
           <div>
             <h3 style={{ ...serif, fontSize: 18, fontWeight: 700, color: C.navy }}>{sem.label}</h3>
@@ -375,8 +375,11 @@ function Analytics() {
 
   const ChartCard = ({ title, sub, children }) => (
     <div className="card" style={{ padding: '24px 28px' }}>
-      <h3 style={{ ...serif, fontSize: 20, fontWeight: 700, color: C.navy, marginBottom: 4 }}>{title}</h3>
-      <p style={{ fontSize: 13, color: C.soft, marginBottom: 20 }}>{sub}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <div style={{ width: 3, height: 20, borderRadius: 99, background: `linear-gradient(180deg, ${C.buzz}, ${C.gold})`, flexShrink: 0 }} />
+        <h3 style={{ ...serif, fontSize: 20, fontWeight: 700, color: C.navy }}>{title}</h3>
+      </div>
+      <p style={{ fontSize: 13, color: C.soft, marginBottom: 20, marginLeft: 13 }}>{sub}</p>
       {children}
     </div>
   );
@@ -384,7 +387,7 @@ function Analytics() {
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <h2 style={{ ...serif, fontSize: 32, fontWeight: 800, color: C.navy, marginBottom: 6 }}>Analytics</h2>
+        <h2 className="section-heading" style={{ ...serif, fontSize: 32, fontWeight: 800, color: C.navy }}>Analytics</h2>
         <p style={{ fontSize: 15, color: C.mid }}>Workload, difficulty distribution, and credit progress across your degree.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 20 }}>
@@ -487,7 +490,7 @@ function RiskFlags({ onCourseClick }) {
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <h2 style={{ ...serif, fontSize: 32, fontWeight: 800, color: C.navy, marginBottom: 6 }}>Risk Flags</h2>
+        <h2 className="section-heading" style={{ ...serif, fontSize: 32, fontWeight: 800, color: C.navy }}>Risk Flags</h2>
         <p style={{ fontSize: 15, color: C.mid }}>Scheduling risks and workload warnings to review before each registration period.</p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -543,19 +546,23 @@ function Background() {
   ];
 
   const Panel = ({ title, color, icon: Icon, children }) => (
-    <div className="card" style={{ borderTop: `4px solid ${color}`, padding: '24px 28px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <Icon size={20} color={color} />
+    <div className="card" style={{ overflow: 'hidden' }}>
+      <div style={{ padding: '18px 24px', background: `linear-gradient(135deg, ${color}10 0%, ${color}04 100%)`, borderBottom: '1px solid rgba(0,48,87,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 8, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon size={18} color={color} />
+        </div>
         <h3 style={{ ...serif, fontSize: 20, fontWeight: 700, color }}>{title}</h3>
       </div>
-      {children}
+      <div style={{ padding: '20px 24px' }}>
+        {children}
+      </div>
     </div>
   );
 
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <h2 style={{ ...serif, fontSize: 32, fontWeight: 800, color: C.navy, marginBottom: 6 }}>Your Background vs. This Degree</h2>
+        <h2 className="section-heading" style={{ ...serif, fontSize: 32, fontWeight: 800, color: C.navy }}>Your Background vs. This Degree</h2>
         <p style={{ fontSize: 15, color: C.mid }}>Where your IT experience pays off, where the gaps are, and how to close them before Fall 2026.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 20, marginBottom: 20 }}>
@@ -605,7 +612,7 @@ function Overview({ onCourseClick }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Disclaimer */}
-      <div className="card" style={{ padding: '16px 20px', borderLeft: `4px solid ${C.blue}`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+      <div className="card" style={{ padding: '16px 20px', borderLeft: `4px solid ${C.blue}`, background: `linear-gradient(135deg, ${C.blue}07 0%, #fff 50%)`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <Info size={16} color={C.blue} style={{ flexShrink: 0, marginTop: 2 }} />
         <p style={{ fontSize: 14, color: C.text, lineHeight: 1.6 }}>
           <strong style={{ color: C.navy }}>Difficulty ratings are adjusted for an IT-background student.</strong> Raw OMSCentral community scores are shown separately in each course detail. Click any course to open the full breakdown.
@@ -614,7 +621,7 @@ function Overview({ onCourseClick }) {
 
       {/* Semester rows */}
       <div>
-        <h2 style={{ ...serif, fontSize: 28, fontWeight: 800, color: C.navy, marginBottom: 16 }}>Degree at a Glance</h2>
+        <h2 className="section-heading" style={{ ...serif, fontSize: 28, fontWeight: 800, color: C.navy, marginBottom: 16 }}>Degree at a Glance</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {SEMESTERS.map(sem => {
             const courses = bySem(sem.index);
@@ -622,7 +629,9 @@ function Overview({ onCourseClick }) {
             const heavy = hrs > 25, mid = hrs >= 18;
             const lc = heavy ? C.orange : mid ? C.buzz : C.teal;
             return (
-              <div key={sem.index} className="card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+              <div key={sem.index} className="card" style={{ padding: '0', display: 'flex', alignItems: 'stretch', overflow: 'hidden' }}>
+                <div style={{ width: 4, flexShrink: 0, background: lc }} />
+                <div style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', flex: 1 }}>
                 <div style={{ width: 120, flexShrink: 0 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.navy }}>{sem.label}</p>
                   {sem.tag && <p style={{ fontSize: 11, fontWeight: 700, color: sem.tagColor, marginTop: 2 }}>{sem.tag}</p>}
@@ -644,6 +653,7 @@ function Overview({ onCourseClick }) {
                   <span style={{ fontSize: 13, fontWeight: 700, color: lc }}>{hrs} hrs / wk</span>
                   {heavy && <AlertTriangle size={13} color={C.orange} />}
                 </div>
+                </div>
               </div>
             );
           })}
@@ -651,30 +661,34 @@ function Overview({ onCourseClick }) {
       </div>
 
       {/* Tuition */}
-      <div className="card" style={{ padding: '28px 32px', borderTop: `4px solid ${C.buzz}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-          <Award size={20} color={C.navy} />
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div style={{ padding: '18px 28px', background: `linear-gradient(135deg, ${C.buzz}12 0%, ${C.gold}08 100%)`, borderBottom: `1px solid rgba(0,48,87,0.07)`, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 8, background: C.buzz + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Award size={18} color={C.goldDk} />
+          </div>
           <h3 style={{ ...serif, fontSize: 22, fontWeight: 700, color: C.navy }}>Tuition Estimate</h3>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-          {[
-            { label: 'Courses', value: '10' },
-            { label: 'Credit Hours', value: '30 cr' },
-            { label: 'Rate', value: '$225 / credit' },
-            { label: 'Estimated Total', value: '$6,750', highlight: true },
-          ].map((s, i) => (
-            <div key={i} style={{
-              borderRadius: 12, padding: '18px 16px', textAlign: 'center',
-              background: s.highlight ? C.navy : C.bg, border: `1px solid ${C.border}`,
-            }}>
-              <p style={{ fontSize: 20, fontWeight: 800, color: s.highlight ? C.buzz : C.navy, lineHeight: 1.1 }}>{s.value}</p>
-              <p style={{ fontSize: 12, color: s.highlight ? 'rgba(255,255,255,0.6)' : C.soft, marginTop: 6 }}>{s.label}</p>
-            </div>
-          ))}
+        <div style={{ padding: '24px 28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
+            {[
+              { label: 'Courses', value: '10' },
+              { label: 'Credit Hours', value: '30 cr' },
+              { label: 'Rate', value: '$225 / credit' },
+              { label: 'Estimated Total', value: '$6,750', highlight: true },
+            ].map((s, i) => (
+              <div key={i} style={{
+                borderRadius: 12, padding: '18px 16px', textAlign: 'center',
+                background: s.highlight ? C.navy : '#f1f5fb', border: s.highlight ? 'none' : `1px solid rgba(0,48,87,0.08)`,
+              }}>
+                <p style={{ fontSize: 20, fontWeight: 800, color: s.highlight ? C.buzz : C.navy, lineHeight: 1.1 }}>{s.value}</p>
+                <p style={{ fontSize: 12, color: s.highlight ? 'rgba(255,255,255,0.6)' : C.soft, marginTop: 6 }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 12, color: C.soft, textAlign: 'center' }}>
+            Estimated tuition only. Does not include student fees. Rates subject to change.
+          </p>
         </div>
-        <p style={{ fontSize: 12, color: C.soft, textAlign: 'center', marginTop: 16 }}>
-          Estimated tuition only. Does not include student fees. Rates subject to change.
-        </p>
       </div>
     </div>
   );
@@ -686,14 +700,14 @@ function Timeline({ onCourseClick }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       <div>
-        <h2 style={{ ...serif, fontSize: 32, fontWeight: 800, color: C.navy, marginBottom: 6 }}>Semester Timeline</h2>
+        <h2 className="section-heading" style={{ ...serif, fontSize: 32, fontWeight: 800, color: C.navy }}>Semester Timeline</h2>
         <p style={{ fontSize: 15, color: C.mid }}>Click any course card to open the full difficulty breakdown.</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
         {SEMESTERS.map(s => <SemCard key={s.index} sem={s} onCourseClick={onCourseClick} />)}
       </div>
       <div>
-        <h2 style={{ ...serif, fontSize: 24, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Backup Courses</h2>
+        <h2 className="section-heading" style={{ ...serif, fontSize: 24, fontWeight: 700, color: C.navy }}>Backup Courses</h2>
         <p style={{ fontSize: 14, color: C.mid, marginBottom: 16 }}>If a planned course doesn't run or you need a lighter load, these are proven options.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
           {backups.map(c => <CourseCard key={c.id} course={c} onClick={onCourseClick} />)}
@@ -730,11 +744,11 @@ function Header({ tab, setTab }) {
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 32 }}>
+          <div style={{ display: 'flex', gap: 10 }}>
             {[['10', 'Courses'], ['30 cr', 'Credits'], ['Summer 2028', 'Completion'], ['$6,750', 'Est. Cost']].map(([v, l]) => (
-              <div key={l} style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: C.buzz }}>{v}</p>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{l}</p>
+              <div key={l} style={{ textAlign: 'center', padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)' }}>
+                <p style={{ fontSize: 14, fontWeight: 800, color: C.buzz, lineHeight: 1 }}>{v}</p>
+                <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 4, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{l}</p>
               </div>
             ))}
           </div>
