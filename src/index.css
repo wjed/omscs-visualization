@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/* Georgia Tech Official Color Palette */
+:root {
+  --gt-navy: #003057;
+  --gt-gold: #B3A369;
+  --gt-gold-medium: #A4925A;
+  --gt-gold-dark: #857437;
+  --gt-buzz-gold: #EAAA00;
+  --gt-gray: #54585A;
+  --gt-pi-mile: #D6DBD4;
+  --gt-diploma: #F9F6E5;
+  --gt-bold-blue: #3A5DAE;
+  --gt-teal: #008C95;
+  --gt-orange: #E04F39;
+  --gt-purple: #5F249F;
+  --gt-lime: #A4D233;
+  --gt-brutal-red: #8B0000;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--gt-navy);
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  min-height: 100vh;
+}
+
+h1, h2, h3, .serif {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #001f3d;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gt-gold);
+  border-radius: 4px;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  backdrop-filter: blur(2px);
+}
+
+.modal-drawer {
+  width: min(560px, 100vw);
+  height: 100vh;
+  background: #001f3d;
+  border-left: 2px solid var(--gt-gold);
+  overflow-y: auto;
+  animation: slideIn 0.25s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* Course card hover */
+.course-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+.course-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(179, 163, 105, 0.35);
+}
+
+/* Nav tab */
+.nav-tab {
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav-tab.active {
+  color: var(--gt-buzz-gold);
+  border-bottom: 2px solid var(--gt-buzz-gold);
+}
+
+/* Difficulty meter */
+.difficulty-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.difficulty-dot.filled {
+  border-color: transparent;
+}
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; color: black; }
+  .modal-overlay { display: none !important; }
+  .print-break { page-break-before: always; }
+}
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Section fade-in */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.4s ease-out;
+}
