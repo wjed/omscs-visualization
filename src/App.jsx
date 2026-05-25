@@ -1,300 +1,257 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import {
-  Clock, BookOpen, AlertTriangle, CheckCircle, XCircle, ChevronRight,
-  TrendingUp, Shield, Brain, Star, ExternalLink, X, GraduationCap,
-  AlertCircle, Info, Award, Target, Zap,
+  Clock, BookOpen, AlertTriangle, CheckCircle, ChevronRight,
+  TrendingUp, Shield, Brain, Star, ExternalLink, X,
+  AlertCircle, Award, Zap, GraduationCap, Info,
 } from 'lucide-react';
 import { COURSES, SEMESTERS, DIFFICULTY_CONFIG, RELATION_CONFIG, RISK_CONFIG } from './data/courses.js';
 
-// ─── Color constants ──────────────────────────────────────────────────────────
+// ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
-  navy:       '#003057',
-  navyDark:   '#001f3d',
-  navyLight:  '#004080',
-  gold:       '#B3A369',
-  goldMedium: '#A4925A',
-  goldDark:   '#857437',
-  buzzGold:   '#EAAA00',
-  gray:       '#54585A',
-  piMile:     '#D6DBD4',
-  diploma:    '#F9F6E5',
-  boldBlue:   '#3A5DAE',
-  teal:       '#008C95',
-  orange:     '#E04F39',
-  purple:     '#5F249F',
-  lime:       '#A4D233',
-  brutalRed:  '#8B0000',
-  white:      '#FFFFFF',
+  navy:      '#003057',
+  navyLight: '#004a8f',
+  gold:      '#B3A369',
+  goldDark:  '#857437',
+  buzz:      '#EAAA00',
+  gray:      '#54585A',
+  lightGray: '#f4f4f4',
+  piMile:    '#D6DBD4',
+  diploma:   '#F9F6E5',
+  blue:      '#3A5DAE',
+  teal:      '#008C95',
+  orange:    '#E04F39',
+  purple:    '#5F249F',
+  lime:      '#A4D233',
+  red:       '#8B0000',
+  white:     '#ffffff',
+  text:      '#1a2535',
+  textMid:   '#4a5568',
+  border:    'rgba(0,0,0,0.08)',
 };
 
-// ─── Utility helpers ──────────────────────────────────────────────────────────
-const plannedCourses = COURSES.filter(c => c.semesterIndex !== 99);
-const semesterCourses = (idx) => plannedCourses.filter(c => c.semesterIndex === idx);
-const totalHours = (idx) => semesterCourses(idx).reduce((s, c) => s + c.workloadHrsPerWeek, 0);
-const diffConfig = (label) => DIFFICULTY_CONFIG[label] || DIFFICULTY_CONFIG['Moderate'];
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const planned   = COURSES.filter(c => c.semesterIndex !== 99);
+const bySem     = (i) => planned.filter(c => c.semesterIndex === i);
+const semHours  = (i) => bySem(i).reduce((s, c) => s + c.workloadHrsPerWeek, 0);
+const dCfg      = (label) => DIFFICULTY_CONFIG[label] || DIFFICULTY_CONFIG['Moderate'];
 
 // ─── Difficulty Badge ─────────────────────────────────────────────────────────
-function DifficultyBadge({ label, size = 'sm' }) {
-  const cfg = diffConfig(label);
-  const pad = size === 'lg' ? 'px-3 py-1 text-sm' : 'px-2 py-0.5 text-xs';
-  const skull = label === 'Brutal' ? ' 💀' : '';
+function DiffBadge({ label, size = 'sm' }) {
+  const { color, textColor } = dCfg(label);
+  const cls = size === 'lg'
+    ? 'px-3 py-1 text-sm font-bold rounded-full'
+    : 'px-2 py-0.5 text-xs font-bold rounded-full';
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full font-bold tracking-wide ${pad}`}
-      style={{ background: cfg.color, color: cfg.textColor }}
-    >
-      {label}{skull}
+    <span className={cls} style={{ background: color, color: textColor }}>
+      {label}{label === 'Brutal' ? ' 💀' : ''}
     </span>
   );
 }
 
-// ─── Relation Badge ───────────────────────────────────────────────────────────
-function RelationBadge({ relation }) {
-  const cfg = RELATION_CONFIG[relation] || RELATION_CONFIG['Elective'];
+// ─── Relation Chip ────────────────────────────────────────────────────────────
+function RelChip({ relation }) {
+  const { color } = RELATION_CONFIG[relation] || RELATION_CONFIG['Elective'];
   return (
     <span
-      className="text-xs px-2 py-0.5 rounded font-semibold uppercase tracking-wider border"
-      style={{ borderColor: cfg.color, color: cfg.color }}
+      className="text-xs px-2 py-0.5 rounded font-semibold uppercase tracking-wider"
+      style={{ background: color + '18', color, border: `1px solid ${color}40` }}
     >
-      {cfg.label}
+      {relation}
     </span>
   );
 }
 
-// ─── Risk Badge ───────────────────────────────────────────────────────────────
-function RiskBadge({ risk }) {
-  const cfg = RISK_CONFIG[risk] || RISK_CONFIG.low;
+// ─── Risk Chip ────────────────────────────────────────────────────────────────
+function RiskChip({ risk }) {
+  const { color, label, icon } = RISK_CONFIG[risk] || RISK_CONFIG.low;
   return (
     <span
       className="text-xs px-2 py-0.5 rounded-full font-bold"
-      style={{ background: cfg.color + '25', color: cfg.color, border: `1px solid ${cfg.color}50` }}
+      style={{ background: color + '18', color, border: `1px solid ${color}50` }}
     >
-      {cfg.icon} {cfg.label}
+      {icon} {label}
     </span>
-  );
-}
-
-// ─── Difficulty Meter ─────────────────────────────────────────────────────────
-function DifficultyMeter({ rating, max = 5, label, rawRating }) {
-  const cfg = diffConfig(label);
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-gray-400 uppercase tracking-wider">IT-Adjusted Difficulty</span>
-        <DifficultyBadge label={label} />
-      </div>
-      <div className="flex gap-1.5 items-center">
-        {Array.from({ length: max }).map((_, i) => (
-          <div
-            key={i}
-            className="difficulty-dot filled"
-            style={{
-              background: i < rating ? cfg.color : 'rgba(255,255,255,0.12)',
-              width: 20, height: 20,
-            }}
-            title={`IT-adjusted: ${rating}/5 | Community avg: ${rawRating}/5`}
-          />
-        ))}
-        <span className="text-sm font-bold ml-1" style={{ color: cfg.color }}>{rating}/5</span>
-      </div>
-      {rawRating && (
-        <p className="text-xs" style={{ color: C.piMile }}>
-          OMSCentral community avg: <span className="font-semibold text-white">{rawRating}/5</span>
-          <span className="ml-1 text-gray-500">(unadjusted for IT background)</span>
-        </p>
-      )}
-    </div>
   );
 }
 
 // ─── Star Rating ──────────────────────────────────────────────────────────────
-function StarRating({ rating }) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.4;
+function Stars({ rating }) {
   return (
     <div className="flex items-center gap-1">
-      {Array.from({ length: 5 }).map((_, i) => (
+      {[1,2,3,4,5].map(i => (
         <Star
-          key={i}
-          size={14}
-          fill={i < full ? C.buzzGold : (i === full && half ? C.buzzGold + '88' : 'transparent')}
-          color={i < full || (i === full && half) ? C.buzzGold : '#444'}
+          key={i} size={13}
+          fill={i <= Math.round(rating) ? C.buzz : 'transparent'}
+          color={i <= Math.round(rating) ? C.buzz : '#ccc'}
         />
       ))}
-      <span className="text-sm font-semibold ml-1" style={{ color: C.buzzGold }}>{rating.toFixed(1)}</span>
+      <span className="text-sm font-bold ml-1" style={{ color: C.navy }}>{rating.toFixed(1)}</span>
+    </div>
+  );
+}
+
+// ─── Difficulty Meter ─────────────────────────────────────────────────────────
+function DiffMeter({ rating, label, raw }) {
+  const { color } = dCfg(label);
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.gray }}>
+          IT-Adjusted Difficulty
+        </span>
+        <DiffBadge label={label} />
+      </div>
+      <div className="flex gap-2 items-center">
+        {[1,2,3,4,5].map(i => (
+          <div
+            key={i} className="diff-dot"
+            style={{ background: i <= rating ? color : '#e2e8f0' }}
+          />
+        ))}
+        <span className="text-sm font-bold ml-1" style={{ color }}>{rating}/5</span>
+      </div>
+      <p className="text-xs" style={{ color: C.textMid }}>
+        Community avg (OMSCentral): <strong>{raw}/5</strong>
+        <span className="ml-1 text-gray-400">— unadjusted</span>
+      </p>
     </div>
   );
 }
 
 // ─── Course Detail Modal ──────────────────────────────────────────────────────
-function CourseDetailModal({ course, onClose }) {
-  const drawerRef = useRef(null);
-
+function CourseModal({ course, onClose }) {
   useEffect(() => {
-    const handler = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', h);
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', h); document.body.style.overflow = ''; };
   }, [onClose]);
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
-
-  const cfg = diffConfig(course.difficultyLabel);
   const sem = SEMESTERS.find(s => s.index === course.semesterIndex);
+  const { color: dColor } = dCfg(course.difficultyLabel);
+  const riskColor = RISK_CONFIG[course.offeringRisk]?.color || C.teal;
 
-  const Section = ({ icon: Icon, title, children, accent }) => (
-    <div className="rounded-lg p-4" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${accent || 'rgba(179,163,105,0.2)'}` }}>
+  const Block = ({ icon: Icon, title, children, accent = C.navy }) => (
+    <div className="rounded-xl p-4 border" style={{ borderColor: accent + '25', background: accent + '05' }}>
       <div className="flex items-center gap-2 mb-2">
-        {Icon && <Icon size={15} color={accent || C.gold} />}
-        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: accent || C.gold }}>{title}</span>
+        {Icon && <Icon size={14} color={accent} />}
+        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: accent }}>{title}</span>
       </div>
-      <div className="text-sm leading-relaxed" style={{ color: C.piMile }}>{children}</div>
+      <p className="text-sm leading-relaxed" style={{ color: C.text }}>{children}</p>
     </div>
   );
 
   return (
     <div className="modal-overlay no-print" onClick={onClose}>
-      <div
-        ref={drawerRef}
-        className="modal-drawer"
-        onClick={e => e.stopPropagation()}
-      >
+      <div className="modal-drawer" onClick={e => e.stopPropagation()}>
+
+        {/* Top stripe */}
+        <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${C.navy} 0%, ${dColor} 100%)` }} />
+
         {/* Header */}
-        <div className="p-6 border-b" style={{ borderColor: C.gold + '40', background: `linear-gradient(135deg, ${C.navyDark} 0%, ${C.navy} 100%)` }}>
-          <div className="flex items-start justify-between gap-4">
+        <div className="p-6 border-b" style={{ borderColor: C.border }}>
+          <div className="flex justify-between items-start gap-4">
             <div className="flex-1">
-              <p className="text-xs font-mono mb-1" style={{ color: C.gold }}>{course.id}</p>
-              <h2 className="text-xl font-bold leading-tight" style={{ fontFamily: 'Georgia, serif', color: C.white }}>
-                {course.name}
-              </h2>
-              <div className="flex flex-wrap items-center gap-2 mt-3">
-                <RelationBadge relation={course.relation} />
-                <DifficultyBadge label={course.difficultyLabel} size="lg" />
-                {sem && sem.tag && (
-                  <span className="text-xs px-2 py-0.5 rounded font-bold" style={{ background: sem.tagColor + '30', color: sem.tagColor, border: `1px solid ${sem.tagColor}` }}>
+              <p className="text-xs font-mono font-semibold mb-1" style={{ color: C.gold }}>{course.id}</p>
+              <h2 className="text-xl font-bold leading-snug mb-3" style={{ color: C.navy }}>{course.name}</h2>
+              <div className="flex flex-wrap gap-2">
+                <RelChip relation={course.relation} />
+                <DiffBadge label={course.difficultyLabel} size="lg" />
+                {sem?.tag && (
+                  <span className="text-xs px-2 py-0.5 rounded font-bold"
+                    style={{ background: sem.tagColor + '20', color: sem.tagColor, border: `1px solid ${sem.tagColor}60` }}>
                     {sem.tag}
                   </span>
                 )}
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="flex-shrink-0 p-1.5 rounded-lg transition-colors hover:bg-white/10"
-              style={{ color: C.gray }}
-            >
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 transition-colors" style={{ color: C.gray }}>
               <X size={20} />
             </button>
           </div>
 
           {/* Quick stats */}
           <div className="grid grid-cols-3 gap-3 mt-5">
-            <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <Clock size={16} color={C.buzzGold} className="mx-auto mb-1" />
-              <p className="text-lg font-bold text-white">{course.workloadHrsPerWeek}</p>
-              <p className="text-xs" style={{ color: C.gray }}>hrs/week</p>
-            </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <BookOpen size={16} color={C.gold} className="mx-auto mb-1" />
-              <p className="text-lg font-bold text-white">{course.creditHours}</p>
-              <p className="text-xs" style={{ color: C.gray }}>credits</p>
-            </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              <Star size={16} color={C.buzzGold} className="mx-auto mb-1" />
-              <p className="text-lg font-bold text-white">{course.communityRating.toFixed(1)}</p>
-              <p className="text-xs" style={{ color: C.gray }}>community</p>
-            </div>
+            {[
+              { icon: Clock, label: 'hrs/week', value: course.workloadHrsPerWeek, color: C.orange },
+              { icon: BookOpen, label: 'credits', value: course.creditHours, color: C.navy },
+              { icon: Star, label: 'community', value: course.communityRating.toFixed(1), color: C.buzz },
+            ].map(({ icon: Icon, label, value, color }) => (
+              <div key={label} className="rounded-xl p-3 text-center" style={{ background: C.lightGray }}>
+                <Icon size={16} color={color} className="mx-auto mb-1" />
+                <p className="text-xl font-bold" style={{ color: C.navy }}>{value}</p>
+                <p className="text-xs" style={{ color: C.gray }}>{label}</p>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Body */}
         <div className="p-6 space-y-4">
-          {/* Difficulty meters */}
-          <div className="rounded-lg p-4 space-y-4" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${cfg.color}40` }}>
-            <DifficultyMeter rating={course.difficultyRating} label={course.difficultyLabel} rawRating={course.communityDifficultyRaw} />
-            <div className="pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Community Rating</p>
-              <StarRating rating={course.communityRating} />
+          {/* Difficulty + rating */}
+          <div className="rounded-xl p-4 border" style={{ borderColor: dColor + '40', background: dColor + '08' }}>
+            <DiffMeter rating={course.difficultyRating} label={course.difficultyLabel} raw={course.communityDifficultyRaw} />
+            <div className="mt-3 pt-3 border-t" style={{ borderColor: C.border }}>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: C.gray }}>Community Rating</p>
+              <Stars rating={course.communityRating} />
             </div>
           </div>
 
-          {/* Semester + offering risk */}
           <div className="flex items-center justify-between text-sm">
-            <span style={{ color: C.piMile }}>
-              <span style={{ color: C.gold }}>📅</span> {course.semester}
-            </span>
-            <RiskBadge risk={course.offeringRisk} />
+            <span className="font-medium" style={{ color: C.textMid }}>📅 {course.semester}</span>
+            <RiskChip risk={course.offeringRisk} />
           </div>
 
-          <Section icon={Brain} title="Why This Is Hard For You" accent={C.orange}>
+          <Block icon={Brain} title="Why This Is Hard For You" accent={C.orange}>
             {course.whyDifficultForYou}
-          </Section>
-
-          <Section icon={AlertTriangle} title="What Makes It Hard">
+          </Block>
+          <Block icon={AlertTriangle} title="What Makes It Hard" accent={C.navy}>
             {course.whatMakesItHard}
-          </Section>
-
-          <Section icon={CheckCircle} title="What Makes It Doable" accent={C.teal}>
+          </Block>
+          <Block icon={CheckCircle} title="What Makes It Doable" accent={C.teal}>
             {course.whatMakesItDoable}
-          </Section>
+          </Block>
 
-          {/* Top tip callout */}
-          <div className="rounded-lg p-4" style={{ background: `linear-gradient(135deg, ${C.buzzGold}18 0%, ${C.gold}10 100%)`, border: `1px solid ${C.buzzGold}50` }}>
+          {/* Top tip */}
+          <div className="rounded-xl p-4" style={{ background: C.buzz + '12', border: `1px solid ${C.buzz}50` }}>
             <div className="flex items-center gap-2 mb-2">
-              <Zap size={15} color={C.buzzGold} />
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.buzzGold }}>Top Community Tip</span>
+              <Zap size={14} color={C.buzz} />
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.goldDark }}>Top Community Tip</span>
             </div>
-            <p className="text-sm leading-relaxed italic" style={{ color: C.white }}>"{course.topTip}"</p>
+            <p className="text-sm leading-relaxed italic" style={{ color: C.text }}>"{course.topTip}"</p>
           </div>
 
-          {/* Prerequisite warning */}
           {course.prerequisiteWarning && (
-            <div className="rounded-lg p-4" style={{ background: `${C.orange}15`, border: `1px solid ${C.orange}50` }}>
+            <div className="rounded-xl p-4" style={{ background: C.orange + '10', border: `1px solid ${C.orange}40` }}>
               <div className="flex items-center gap-2 mb-2">
-                <AlertCircle size={15} color={C.orange} />
+                <AlertCircle size={14} color={C.orange} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: C.orange }}>Prerequisite Warning</span>
               </div>
-              <p className="text-sm leading-relaxed" style={{ color: '#ffcfc7' }}>{course.prerequisiteWarning}</p>
+              <p className="text-sm leading-relaxed" style={{ color: C.text }}>{course.prerequisiteWarning}</p>
             </div>
           )}
 
-          {/* Offering risk */}
-          <div className="rounded-lg p-4" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${RISK_CONFIG[course.offeringRisk]?.color}40` }}>
+          <div className="rounded-xl p-4 border" style={{ borderColor: riskColor + '40', background: riskColor + '08' }}>
             <div className="flex items-center gap-2 mb-2">
-              <Shield size={15} color={RISK_CONFIG[course.offeringRisk]?.color} />
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: RISK_CONFIG[course.offeringRisk]?.color }}>
-                Offering Risk
-              </span>
-              <RiskBadge risk={course.offeringRisk} />
+              <Shield size={14} color={riskColor} />
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: riskColor }}>Offering Risk</span>
+              <RiskChip risk={course.offeringRisk} />
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: C.piMile }}>{course.offeringRiskNote}</p>
+            <p className="text-sm leading-relaxed" style={{ color: C.text }}>{course.offeringRiskNote}</p>
           </div>
 
-          {/* External links */}
-          <div className="flex gap-3 pt-2">
-            <a
-              href="#"
-              onClick={e => e.preventDefault()}
-              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg transition-colors hover:bg-white/10"
-              style={{ color: C.boldBlue, border: `1px solid ${C.boldBlue}50` }}
-            >
-              <ExternalLink size={12} /> View on OMSCentral
-            </a>
-            <a
-              href="#"
-              onClick={e => e.preventDefault()}
-              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg transition-colors hover:bg-white/10"
-              style={{ color: C.boldBlue, border: `1px solid ${C.boldBlue}50` }}
-            >
-              <ExternalLink size={12} /> View on Reddit
-            </a>
+          <div className="flex gap-3 pt-1">
+            {['OMSCentral', 'Reddit r/OMSCS'].map(site => (
+              <a key={site} href="#" onClick={e => e.preventDefault()}
+                className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border font-medium transition-colors hover:bg-gray-50"
+                style={{ color: C.blue, borderColor: C.blue + '50' }}>
+                <ExternalLink size={11} /> View on {site}
+              </a>
+            ))}
           </div>
         </div>
       </div>
@@ -304,50 +261,34 @@ function CourseDetailModal({ course, onClose }) {
 
 // ─── Course Card ──────────────────────────────────────────────────────────────
 function CourseCard({ course, onClick }) {
-  const cfg = diffConfig(course.difficultyLabel);
-  const isBackup = course.status === 'backup';
-
+  const { color } = dCfg(course.difficultyLabel);
   return (
     <div
-      className="course-card rounded-lg p-3 border"
-      style={{
-        background: isBackup ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.06)',
-        borderColor: cfg.color + '35',
-      }}
+      className="course-card card p-4 flex flex-col gap-2"
+      style={{ borderLeft: `3px solid ${color}` }}
       onClick={() => onClick(course)}
-      role="button"
-      tabIndex={0}
+      role="button" tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && onClick(course)}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
+      <div className="flex justify-between items-start gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-mono mb-0.5" style={{ color: C.gold + 'aa' }}>{course.id}</p>
-          <p className="text-sm font-semibold leading-snug text-white truncate" title={course.name}>
-            {course.name}
-          </p>
+          <p className="text-xs font-mono mb-0.5" style={{ color: C.gold }}>{course.id}</p>
+          <p className="text-sm font-bold leading-snug" style={{ color: C.navy }} title={course.name}>{course.name}</p>
         </div>
-        <ChevronRight size={14} color={C.gray} className="flex-shrink-0 mt-1" />
+        <ChevronRight size={14} color={C.piMile} className="flex-shrink-0 mt-0.5" />
       </div>
-
-      <div className="flex items-center justify-between flex-wrap gap-1">
+      <div className="flex items-center justify-between flex-wrap gap-1.5">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <DifficultyBadge label={course.difficultyLabel} />
-          <RelationBadge relation={course.relation} />
+          <DiffBadge label={course.difficultyLabel} />
+          <RelChip relation={course.relation} />
         </div>
-        <div className="flex items-center gap-1 text-xs" style={{ color: C.piMile }}>
-          <Clock size={11} />
-          <span>{course.workloadHrsPerWeek}h/wk</span>
+        <div className="flex items-center gap-1 text-xs font-medium" style={{ color: C.gray }}>
+          <Clock size={11} />{course.workloadHrsPerWeek}h/wk
         </div>
       </div>
-
       {course.status === 'completed' && (
-        <div className="mt-2 flex items-center gap-1 text-xs" style={{ color: C.teal }}>
-          <CheckCircle size={12} /> Completed
-        </div>
-      )}
-      {course.status === 'in-progress' && (
-        <div className="mt-2 flex items-center gap-1 text-xs" style={{ color: C.buzzGold }}>
-          <TrendingUp size={12} /> In Progress
+        <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: C.teal }}>
+          <CheckCircle size={11} /> Completed
         </div>
       )}
     </div>
@@ -355,242 +296,168 @@ function CourseCard({ course, onClick }) {
 }
 
 // ─── Semester Card ────────────────────────────────────────────────────────────
-function SemesterCard({ semester, onCourseClick }) {
-  const courses = semesterCourses(semester.index);
-  const hours = totalHours(semester.index);
-  const isHeavy = hours > 25;
-  const isMedium = hours >= 18 && hours <= 25;
-
-  const loadColor = isHeavy ? C.orange : isMedium ? C.buzzGold : C.teal;
-  const loadLabel = isHeavy ? '🚨 HEAVY LOAD' : isMedium ? '⚠️ MODERATE LOAD' : '✓ MANAGEABLE';
+function SemCard({ sem, onCourseClick }) {
+  const courses = bySem(sem.index);
+  const hrs = semHours(sem.index);
+  const heavy = hrs > 25;
+  const mid   = hrs >= 18 && hrs <= 25;
+  const loadColor = heavy ? C.orange : mid ? C.buzz : C.teal;
+  const loadText  = heavy ? '🚨 Heavy load' : mid ? '⚠ Moderate' : '✓ Manageable';
 
   return (
-    <div
-      className="rounded-xl p-4 flex-1 min-w-64"
-      style={{
-        background: `linear-gradient(160deg, ${C.navyDark} 0%, ${C.navy} 100%)`,
-        border: `1px solid ${C.gold}30`,
-        minWidth: '260px',
-      }}
-    >
-      {/* Semester header */}
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="font-bold text-base" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-            {semester.label}
-          </h3>
-          {semester.tag && (
-            <span
-              className="text-xs px-2 py-0.5 rounded font-bold mt-1 inline-block"
-              style={{ background: semester.tagColor + '25', color: semester.tagColor, border: `1px solid ${semester.tagColor}` }}
-            >
-              {semester.tag}
-            </span>
-          )}
+    <div className="card flex flex-col" style={{ borderTop: `3px solid ${heavy ? C.orange : mid ? C.buzz : C.teal}` }}>
+      <div className="p-4 border-b" style={{ borderColor: C.border }}>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h3 className="font-bold text-base" style={{ color: C.navy }}>{sem.label}</h3>
+            {sem.tag && (
+              <span className="text-xs px-2 py-0.5 rounded font-bold mt-1 inline-block"
+                style={{ background: sem.tagColor + '20', color: sem.tagColor, border: `1px solid ${sem.tagColor}60` }}>
+                {sem.tag}
+              </span>
+            )}
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xs font-bold" style={{ color: loadColor }}>{loadText}</p>
+            <p className="text-xs mt-0.5" style={{ color: C.gray }}>~{hrs} hrs/wk</p>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="text-xs font-bold" style={{ color: loadColor }}>{loadLabel}</p>
-          <p className="text-xs mt-0.5" style={{ color: C.gray }}>~{hours} hrs/wk total</p>
+        {/* load bar */}
+        <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: '#e2e8f0' }}>
+          <div className="h-full rounded-full" style={{ width: `${Math.min((hrs/35)*100, 100)}%`, background: loadColor }} />
         </div>
       </div>
-
-      {/* Load bar */}
-      <div className="h-1.5 rounded-full mb-3 overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${Math.min((hours / 35) * 100, 100)}%`, background: loadColor }}
-        />
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        {courses.map(c => <CourseCard key={c.id} course={c} onClick={onCourseClick} />)}
       </div>
-
-      {/* Course cards */}
-      <div className="space-y-2">
-        {courses.map(course => (
-          <CourseCard key={course.id} course={course} onClick={onCourseClick} />
-        ))}
-      </div>
-
-      {/* Spring 2027 extra warning */}
-      {semester.index === 2 && (
-        <div className="mt-3 rounded-lg p-3" style={{ background: `${C.orange}18`, border: `1px solid ${C.orange}40` }}>
-          <p className="text-xs leading-snug" style={{ color: '#ffcfc7' }}>
-            <span className="font-bold">⚠️ Consider moving CS6795</span> to a lighter semester —
-            CS6601 alone is 23 hrs/week.
-          </p>
+      {sem.index === 2 && (
+        <div className="mx-4 mb-4 p-3 rounded-lg text-xs leading-snug" style={{ background: C.orange + '12', border: `1px solid ${C.orange}40`, color: C.text }}>
+          <strong style={{ color: C.orange }}>⚠ Consider moving CS6795</strong> to a lighter semester — CS6601 alone averages 23 hrs/wk.
         </div>
       )}
     </div>
   );
 }
 
-// ─── Analytics Dashboard ──────────────────────────────────────────────────────
-function AnalyticsDashboard() {
-  // Chart A — Workload per semester
+// ─── Analytics ────────────────────────────────────────────────────────────────
+function Analytics() {
   const workloadData = SEMESTERS.map(s => ({
     name: s.label.replace(' 20', " '"),
-    hours: totalHours(s.index),
+    hours: semHours(s.index),
   }));
+  const barColor = (h) => h > 25 ? C.orange : h >= 18 ? C.buzz : C.teal;
 
-  const workloadColor = (hours) => hours > 25 ? C.orange : hours >= 18 ? C.buzzGold : C.teal;
-
-  // Chart B — Difficulty distribution
   const diffCounts = {};
-  plannedCourses.forEach(c => {
-    diffCounts[c.difficultyLabel] = (diffCounts[c.difficultyLabel] || 0) + 1;
-  });
-  const diffData = Object.entries(diffCounts).map(([name, value]) => ({
-    name, value, color: DIFFICULTY_CONFIG[name]?.color || C.gray,
-  }));
+  planned.forEach(c => { diffCounts[c.difficultyLabel] = (diffCounts[c.difficultyLabel]||0)+1; });
+  const diffData = Object.entries(diffCounts).map(([name,value]) => ({ name, value, color: dCfg(name).color }));
 
-  // Chart C — Relation breakdown
   const relCounts = {};
-  plannedCourses.forEach(c => {
-    relCounts[c.relation] = (relCounts[c.relation] || 0) + c.creditHours;
-  });
-  const relData = Object.entries(relCounts).map(([name, value]) => ({
-    name, value, color: RELATION_CONFIG[name]?.color || C.gray,
-  }));
+  planned.forEach(c => { relCounts[c.relation] = (relCounts[c.relation]||0)+c.creditHours; });
+  const relData = Object.entries(relCounts).map(([name,value]) => ({ name, value, color: RELATION_CONFIG[name]?.color || C.gray }));
 
-  // Chart D — Cumulative credits
-  const semColors = [C.gold, C.teal, C.boldBlue, C.orange, C.purple, C.lime];
-  let cumulative = 0;
-  const progressData = SEMESTERS.map((s, i) => {
-    const credits = semesterCourses(s.index).reduce((a, c) => a + c.creditHours, 0);
-    cumulative += credits;
-    return { label: s.label, credits, cumulative, color: semColors[i] };
+  const semColors = [C.navy, C.teal, C.blue, C.orange, C.purple, C.lime];
+  let cum = 0;
+  const progData = SEMESTERS.map((s,i) => {
+    const cr = bySem(s.index).reduce((a,c) => a+c.creditHours, 0);
+    cum += cr;
+    return { label: s.label, cr, cum, color: semColors[i] };
   });
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const TTip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
     return (
-      <div className="rounded-lg p-3 text-sm" style={{ background: C.navyDark, border: `1px solid ${C.gold}50` }}>
-        <p className="font-semibold text-white mb-1">{label}</p>
-        {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color || C.piMile }}>{p.name}: {p.value}{p.name === 'hours' ? ' hrs/wk' : ''}</p>
-        ))}
+      <div className="card p-3 text-sm shadow-lg">
+        <p className="font-bold mb-1" style={{ color: C.navy }}>{label}</p>
+        {payload.map((p,i) => <p key={i} style={{ color: p.color || C.text }}>{p.name}: {p.value}{p.name==='hours'?' hrs/wk':''}</p>)}
       </div>
     );
   };
 
   return (
-    <div className="space-y-8">
-      {/* Section header */}
+    <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-          Analytics Dashboard
-        </h2>
-        <p className="text-sm" style={{ color: C.gray }}>Workload, difficulty, and progress visualized across your full degree plan.</p>
+        <h2 className="text-2xl font-bold mb-1" style={{ color: C.navy }}>Analytics Dashboard</h2>
+        <p className="text-sm" style={{ color: C.textMid }}>Workload, difficulty, and credit progress across your full degree plan.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* Chart A: Workload */}
-        <div className="rounded-xl p-5" style={{ background: C.navyDark, border: `1px solid ${C.gold}25` }}>
-          <h3 className="font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-            Semester Workload
-          </h3>
-          <p className="text-xs mb-4" style={{ color: C.gray }}>Estimated hrs/week (sum of course averages)</p>
+        {/* Workload */}
+        <div className="card p-5">
+          <h3 className="font-bold mb-0.5" style={{ color: C.navy }}>Semester Workload</h3>
+          <p className="text-xs mb-4" style={{ color: C.gray }}>Estimated hrs/week · dashed line = 20-hr working-student limit</p>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={workloadData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" />
-              <XAxis dataKey="name" tick={{ fill: C.piMile, fontSize: 11 }} />
-              <YAxis tick={{ fill: C.piMile, fontSize: 11 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={20} stroke={C.orange} strokeDasharray="6 3" label={{ value: 'Full-time limit', fill: C.orange, fontSize: 10, position: 'insideTopRight' }} />
-              <Bar dataKey="hours" radius={[4, 4, 0, 0]}>
-                {workloadData.map((entry, i) => (
-                  <Cell key={i} fill={workloadColor(entry.hours)} />
-                ))}
+            <BarChart data={workloadData} margin={{ top:8, right:8, left:-16, bottom:0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" tick={{ fill: C.gray, fontSize: 11 }} />
+              <YAxis tick={{ fill: C.gray, fontSize: 11 }} />
+              <Tooltip content={<TTip />} />
+              <ReferenceLine y={20} stroke={C.orange} strokeDasharray="5 3"
+                label={{ value:'20h limit', fill: C.orange, fontSize:10, position:'insideTopRight' }} />
+              <Bar dataKey="hours" name="hours" radius={[4,4,0,0]}>
+                {workloadData.map((e,i) => <Cell key={i} fill={barColor(e.hours)} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Chart B: Difficulty Distribution */}
-        <div className="rounded-xl p-5" style={{ background: C.navyDark, border: `1px solid ${C.gold}25` }}>
-          <h3 className="font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-            Difficulty Distribution
-          </h3>
-          <p className="text-xs mb-4" style={{ color: C.gray }}>IT-adjusted ratings across all planned courses</p>
+        {/* Difficulty distribution */}
+        <div className="card p-5">
+          <h3 className="font-bold mb-0.5" style={{ color: C.navy }}>Difficulty Distribution</h3>
+          <p className="text-xs mb-4" style={{ color: C.gray }}>IT-adjusted ratings across 10 planned courses</p>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={diffData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
-                {diffData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
+              <Pie data={diffData} cx="50%" cy="50%" innerRadius={55} outerRadius={88} paddingAngle={3} dataKey="value">
+                {diffData.map((e,i) => <Cell key={i} fill={e.color} />)}
               </Pie>
-              <Tooltip
-                formatter={(value, name) => [`${value} course${value > 1 ? 's' : ''}`, name]}
-                contentStyle={{ background: C.navyDark, border: `1px solid ${C.gold}50`, borderRadius: 8 }}
-                labelStyle={{ color: C.white }}
-                itemStyle={{ color: C.piMile }}
-              />
-              <Legend
-                formatter={(value) => <span style={{ color: C.piMile, fontSize: 12 }}>{value}</span>}
-              />
+              <Tooltip formatter={(v,n) => [`${v} course${v>1?'s':''}`, n]}
+                contentStyle={{ borderRadius:8, border:`1px solid ${C.border}`, fontSize:13 }} />
+              <Legend formatter={v => <span style={{ color:C.text, fontSize:12 }}>{v}</span>} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Chart C: Relation Breakdown */}
-        <div className="rounded-xl p-5" style={{ background: C.navyDark, border: `1px solid ${C.gold}25` }}>
-          <h3 className="font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-            Credit Hour Breakdown
-          </h3>
-          <p className="text-xs mb-4" style={{ color: C.gray }}>Credits by course category</p>
-          <div className="flex items-center gap-6">
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie data={relData} cx="50%" cy="50%" outerRadius={75} dataKey="value" label={({ name, value }) => `${value}cr`} labelLine={{ stroke: C.gray }}>
-                  {relData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value, name) => [`${value} credits`, name]}
-                  contentStyle={{ background: C.navyDark, border: `1px solid ${C.gold}50`, borderRadius: 8 }}
-                  itemStyle={{ color: C.piMile }}
-                />
-                <Legend formatter={(value) => <span style={{ color: C.piMile, fontSize: 12 }}>{value}</span>} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+        {/* Credit breakdown */}
+        <div className="card p-5">
+          <h3 className="font-bold mb-0.5" style={{ color: C.navy }}>Credit Hour Breakdown</h3>
+          <p className="text-xs mb-4" style={{ color: C.gray }}>Credits by course category (30 total)</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie data={relData} cx="50%" cy="50%" outerRadius={82} dataKey="value"
+                label={({ name, value }) => `${name} (${value}cr)`}
+                labelLine={{ stroke: C.gray }}>
+                {relData.map((e,i) => <Cell key={i} fill={e.color} />)}
+              </Pie>
+              <Tooltip formatter={(v,n) => [`${v} credits`, n]}
+                contentStyle={{ borderRadius:8, border:`1px solid ${C.border}`, fontSize:13 }} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* Chart D: Credit Progress */}
-        <div className="rounded-xl p-5" style={{ background: C.navyDark, border: `1px solid ${C.gold}25` }}>
-          <h3 className="font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-            Cumulative Credit Progress
-          </h3>
-          <p className="text-xs mb-4" style={{ color: C.gray }}>Degree completion: 30 credit hours total</p>
-          <div className="space-y-4">
-            {/* Visual progress bar */}
+        {/* Cumulative progress */}
+        <div className="card p-5">
+          <h3 className="font-bold mb-0.5" style={{ color: C.navy }}>Cumulative Credit Progress</h3>
+          <p className="text-xs mb-4" style={{ color: C.gray }}>30 credit hours to graduation</p>
+          <div className="space-y-5">
             <div>
-              <div className="flex justify-between text-xs mb-1" style={{ color: C.piMile }}>
+              <div className="flex justify-between text-xs mb-2" style={{ color: C.gray }}>
                 <span>0 credits</span>
-                <span className="font-bold" style={{ color: C.buzzGold }}>30 credits (goal)</span>
+                <span className="font-bold" style={{ color: C.navy }}>30 credits (goal)</span>
               </div>
-              <div className="h-6 rounded-full overflow-hidden flex" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                {progressData.map((s, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: `${(s.credits / 30) * 100}%`,
-                      background: s.color,
-                      borderRight: i < progressData.length - 1 ? '2px solid rgba(0,48,87,0.8)' : 'none',
-                    }}
-                    title={`${s.label}: ${s.credits} credits`}
-                  />
+              <div className="h-7 rounded-full overflow-hidden flex" style={{ background: '#e2e8f0' }}>
+                {progData.map((s,i) => (
+                  <div key={i} style={{
+                    width: `${(s.cr/30)*100}%`, background: s.color,
+                    borderRight: i < progData.length-1 ? '2px solid rgba(255,255,255,0.6)' : 'none',
+                  }} title={`${s.label}: +${s.cr}cr (total ${s.cum}cr)`} />
                 ))}
               </div>
             </div>
-
-            {/* Legend */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-              {progressData.map((s, i) => (
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+              {progData.map((s,i) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
                   <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: s.color }} />
-                  <span style={{ color: C.piMile }}>{s.label}</span>
-                  <span className="font-semibold text-white ml-auto">{s.cumulative}cr</span>
+                  <span style={{ color: C.textMid }}>{s.label}</span>
+                  <span className="font-bold ml-auto" style={{ color: C.navy }}>{s.cum}cr</span>
                 </div>
               ))}
             </div>
@@ -601,91 +468,51 @@ function AnalyticsDashboard() {
   );
 }
 
-// ─── Risk Flags Panel ─────────────────────────────────────────────────────────
-function RiskFlagsPanel({ onCourseClick }) {
+// ─── Risk Flags ───────────────────────────────────────────────────────────────
+function RiskFlags({ onCourseClick }) {
   const flags = [
-    {
-      course: COURSES.find(c => c.id === 'CS6150'),
-      level: 'high',
-      title: 'CS6150 — Computing for Good',
-      note: 'Only offered ~6 times in 12 semesters. Has disappeared from the schedule. Always have CS6261 or CS6250 ready as substitutes.',
-    },
-    {
-      course: COURSES.find(c => c.id === 'CS8803-O23'),
-      level: 'medium',
-      title: 'CS8803-O23 — Modern Internet Research Methods',
-      note: 'Newer course with only ~4 semesters of history. Fall pattern observed but not guaranteed. Verify availability when registering for Fall 2027.',
-    },
-    {
-      course: COURSES.find(c => c.id === 'PUBP8823'),
-      level: 'medium',
-      title: 'PUBP8823 — Geopolitics of Cybersecurity',
-      note: 'Only 4 semesters of history since inaugural Spring 2023 offering. Spring availability confirmed but data is thin. Have a backup elective ready.',
-    },
-    {
-      course: COURSES.find(c => c.id === 'CS6601'),
-      level: 'high',
-      title: '⚠️ Spring 2027 Load Warning',
-      note: 'CS6601 alone averages 23 hrs/week. Paired with CS6795 (~8 hrs/week) = ~31 hrs/week while working full-time. Strongly consider moving CS6795 to a separate semester.',
-      isSemesterWarning: true,
-    },
-    {
-      course: COURSES.find(c => c.id === 'CS6601'),
-      level: 'high',
-      title: '💀 CS6601 — Take This Alone',
-      note: 'Statistically the most brutal course in OMSCS. If you find yourself struggling after week 3, drop early — protect your GPA. Do not pair with any other course.',
-      isCourseWarning: true,
-    },
+    { course: 'CS6150',  level:'high',   title:'CS6150 — Computing for Good',
+      note:'Only offered ~6 times in 12 semesters. Has disappeared from the schedule before. Always have CS6261 or CS6250 ready as substitutes.' },
+    { course: 'CS8803-O23', level:'medium', title:'CS8803-O23 — Modern Internet Research Methods',
+      note:'Only ~4 semesters of history. Fall pattern observed but not guaranteed. Verify availability before Fall 2027 registration.' },
+    { course: 'PUBP8823', level:'medium', title:'PUBP8823 — Geopolitics of Cybersecurity',
+      note:'Only 4 semesters since Spring 2023 inaugural offering. Spring availability confirmed but data is thin. Have a backup ready.' },
+    { course: 'CS6601',  level:'high',   title:'⚠️ Spring 2027 Load Warning',
+      note:'CS6601 alone averages 23 hrs/wk. Paired with CS6795 (~8 hrs/wk) = ~31 hrs/wk while working full-time. Strongly consider moving CS6795 to a separate semester.',
+      noLink: true },
+    { course: 'CS6601',  level:'high',   title:'💀 CS6601 — Take This Course Alone',
+      note:'Statistically the most brutal course in OMSCS. If you\'re struggling after week 3, drop early to protect your GPA. Do not pair it with any other course.' },
   ];
 
-  const levelStyles = {
-    high:   { border: C.orange, bg: `${C.orange}12`, icon: '🚨', label: 'HIGH RISK', labelColor: C.orange },
-    medium: { border: C.buzzGold, bg: `${C.buzzGold}10`, icon: '⚠️', label: 'MEDIUM RISK', labelColor: C.buzzGold },
-    low:    { border: C.teal, bg: `${C.teal}10`, icon: '✓', label: 'LOW RISK', labelColor: C.teal },
+  const lvl = {
+    high:   { bg: C.orange+'0f', border: C.orange+'40', label:'HIGH RISK',   labelBg: C.orange+'18', labelColor: C.orange, icon:'🚨' },
+    medium: { bg: C.buzz+'0f',   border: C.buzz+'40',   label:'MEDIUM RISK', labelBg: C.buzz+'18',   labelColor: '#92700a', icon:'⚠️' },
   };
 
   return (
     <div className="space-y-4">
-      {/* Section header */}
-      <div className="flex items-start gap-3 mb-2">
-        <div>
-          <h2 className="text-xl font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-            Risk Flags
-          </h2>
-          <p className="text-sm" style={{ color: C.gray }}>
-            Scheduling risks and workload warnings to watch before each registration period.
-          </p>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold mb-1" style={{ color: C.navy }}>Risk Flags</h2>
+        <p className="text-sm" style={{ color: C.textMid }}>Scheduling risks and workload warnings to review before each registration period.</p>
       </div>
-
-      {flags.map((flag, i) => {
-        const s = levelStyles[flag.level];
+      {flags.map((f, i) => {
+        const s = lvl[f.level];
+        const c = COURSES.find(x => x.id === f.course);
         return (
-          <div
-            key={i}
-            className="rounded-xl p-5"
-            style={{ background: s.bg, border: `1px solid ${s.border}50` }}
-          >
+          <div key={i} className="card p-5" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
             <div className="flex items-start gap-3">
-              <span className="text-xl flex-shrink-0">{s.icon}</span>
+              <span className="text-xl flex-shrink-0 mt-0.5">{s.icon}</span>
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <h4 className="font-bold text-white text-sm">{flag.title}</h4>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded font-bold"
-                    style={{ background: s.labelColor + '25', color: s.labelColor }}
-                  >
-                    {s.label}
-                  </span>
+                  <h4 className="font-bold" style={{ color: C.navy }}>{f.title}</h4>
+                  <span className="text-xs px-2 py-0.5 rounded font-bold"
+                    style={{ background: s.labelBg, color: s.labelColor }}>{s.label}</span>
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: C.piMile }}>{flag.note}</p>
-                {flag.course && !flag.isSemesterWarning && (
-                  <button
-                    className="mt-2 text-xs flex items-center gap-1 transition-colors hover:opacity-80"
-                    style={{ color: C.gold }}
-                    onClick={() => onCourseClick(flag.course)}
-                  >
-                    View course details <ChevronRight size={12} />
+                <p className="text-sm leading-relaxed" style={{ color: C.text }}>{f.note}</p>
+                {!f.noLink && c && (
+                  <button className="mt-2 text-xs font-semibold flex items-center gap-1 hover:underline"
+                    style={{ color: C.blue }} onClick={() => onCourseClick(c)}>
+                    View course details <ChevronRight size={11} />
                   </button>
                 )}
               </div>
@@ -698,85 +525,67 @@ function RiskFlagsPanel({ onCourseClick }) {
 }
 
 // ─── Background Panel ─────────────────────────────────────────────────────────
-function BackgroundPanel() {
-  const advantages = [
-    { text: "Networking concepts", courses: "helps CS6675, CS6250 backup, PUBP courses" },
-    { text: "Security/policy familiarity", courses: "PUBP6725 will feel like professional development" },
-    { text: "Systems thinking", courses: "helps KBAI's structured reasoning, CS6300 project management" },
-    { text: "Real-world context", courses: "enriches ethics, policy, and research courses" },
+function Background() {
+  const pros = [
+    { label:'Networking concepts', sub:'helps CS6675, CS6250 backup, PUBP courses' },
+    { label:'Security & policy familiarity', sub:'PUBP6725 will feel like structured professional development' },
+    { label:'Systems thinking', sub:'helps KBAI\'s structured reasoning, CS6300 project management' },
+    { label:'Real-world context', sub:'enriches ethics, policy, and research courses' },
   ];
-
   const gaps = [
-    { text: "Algorithms & data structures", action: "Study before CS6601 (Spring 2027)" },
-    { text: "Python proficiency", action: "Must be solid before Fall 2026 starts" },
-    { text: "Probability & statistics", action: "Review before CS6601" },
-    { text: "No formal ML/math background", action: "CS6601 will expose this hard" },
-    { text: "Academic writing", action: "KBAI and CogSci are writing-heavy; start practicing now" },
+    { label:'Algorithms & data structures', action:'Study before CS6601 (Spring 2027)' },
+    { label:'Python proficiency', action:'Must be solid before Fall 2026 starts' },
+    { label:'Probability & statistics', action:'Review before CS6601' },
+    { label:'No formal ML/math background', action:'CS6601 will expose this hard' },
+    { label:'Academic writing', action:'KBAI and CogSci are writing-heavy — start practicing now' },
   ];
-
-  const studyItems = [
-    { subject: "Python", resource: "\"Automate the Boring Stuff with Python\" + LeetCode Easy problems" },
-    { subject: "Algorithms", resource: "MIT 6.006 on YouTube (free)" },
-    { subject: "Probability", resource: "Khan Academy Statistics + 3Blue1Brown \"Essence of\" series" },
-    { subject: "AI Concepts", resource: "First 3 chapters of Russell & Norvig (free preview online)" },
+  const study = [
+    { sub:'Python', res:'"Automate the Boring Stuff with Python" + LeetCode Easy problems' },
+    { sub:'Algorithms', res:'MIT 6.006 on YouTube (free)' },
+    { sub:'Probability', res:'Khan Academy Statistics + 3Blue1Brown "Essence of" series' },
+    { sub:'AI Concepts', res:'First 3 chapters of Russell & Norvig (free preview online)' },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Section header */}
-      <div className="rounded-xl p-5" style={{ background: `linear-gradient(135deg, ${C.navyDark} 0%, ${C.navy} 100%)`, border: `1px solid ${C.gold}30` }}>
-        <div className="flex items-start gap-3">
-          <GraduationCap size={28} color={C.buzzGold} className="flex-shrink-0 mt-0.5" />
-          <div>
-            <h2 className="text-xl font-bold mb-1" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-              Your Background vs. This Degree
-            </h2>
-            <p className="text-sm leading-relaxed" style={{ color: C.piMile }}>
-              A personalized reality check. You're coming from an IT background into an AI/CS master's — that's ambitious and achievable.
-              Here's exactly where your experience pays off, where the gaps are, and how to close them before you start.
-            </p>
-          </div>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold mb-1" style={{ color: C.navy }}>Your Background vs. This Degree</h2>
+        <p className="text-sm" style={{ color: C.textMid }}>
+          A personalized reality check — where your IT experience pays off, where the gaps are, and how to close them before Fall 2026.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* Advantages */}
-        <div className="rounded-xl p-5" style={{ background: C.navyDark, border: `1px solid ${C.teal}40` }}>
+        <div className="card p-5" style={{ borderTop: `3px solid ${C.teal}` }}>
           <div className="flex items-center gap-2 mb-4">
             <CheckCircle size={18} color={C.teal} />
-            <h3 className="font-bold" style={{ fontFamily: 'Georgia, serif', color: C.teal }}>
-              Your IT Background Advantages
-            </h3>
+            <h3 className="font-bold" style={{ color: C.teal }}>IT Background Advantages</h3>
           </div>
           <div className="space-y-3">
-            {advantages.map((item, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-sm flex-shrink-0 mt-0.5" style={{ color: C.teal }}>✅</span>
+            {pros.map((p,i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="text-sm flex-shrink-0" style={{ color: C.teal }}>✅</span>
                 <div>
-                  <p className="text-sm font-semibold text-white">{item.text}</p>
-                  <p className="text-xs mt-0.5" style={{ color: C.gray }}>{item.courses}</p>
+                  <p className="text-sm font-semibold" style={{ color: C.navy }}>{p.label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: C.textMid }}>{p.sub}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Gaps */}
-        <div className="rounded-xl p-5" style={{ background: C.navyDark, border: `1px solid ${C.orange}40` }}>
+        <div className="card p-5" style={{ borderTop: `3px solid ${C.orange}` }}>
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle size={18} color={C.orange} />
-            <h3 className="font-bold" style={{ fontFamily: 'Georgia, serif', color: C.orange }}>
-              Gaps to Address
-            </h3>
+            <h3 className="font-bold" style={{ color: C.orange }}>Gaps to Address</h3>
           </div>
           <div className="space-y-3">
-            {gaps.map((item, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-sm flex-shrink-0 mt-0.5" style={{ color: C.orange }}>⚠️</span>
+            {gaps.map((g,i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="text-sm flex-shrink-0">⚠️</span>
                 <div>
-                  <p className="text-sm font-semibold text-white">{item.text}</p>
-                  <p className="text-xs mt-0.5" style={{ color: C.gray }}>→ {item.action}</p>
+                  <p className="text-sm font-semibold" style={{ color: C.navy }}>{g.label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: C.orange }}>→ {g.action}</p>
                 </div>
               </div>
             ))}
@@ -784,19 +593,16 @@ function BackgroundPanel() {
         </div>
       </div>
 
-      {/* Study plan */}
-      <div className="rounded-xl p-5" style={{ background: C.navyDark, border: `1px solid ${C.gold}30` }}>
+      <div className="card p-5" style={{ borderTop: `3px solid ${C.buzz}` }}>
         <div className="flex items-center gap-2 mb-4">
-          <BookOpen size={18} color={C.buzzGold} />
-          <h3 className="font-bold" style={{ fontFamily: 'Georgia, serif', color: C.buzzGold }}>
-            Recommended Self-Study Before Starting
-          </h3>
+          <BookOpen size={18} color={C.navy} />
+          <h3 className="font-bold" style={{ color: C.navy }}>Recommended Self-Study Before Starting</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {studyItems.map((item, i) => (
-            <div key={i} className="rounded-lg p-3" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.gold}20` }}>
-              <p className="text-sm font-bold mb-1" style={{ color: C.buzzGold }}>📚 {item.subject}</p>
-              <p className="text-xs leading-relaxed" style={{ color: C.piMile }}>{item.resource}</p>
+          {study.map((s,i) => (
+            <div key={i} className="rounded-xl p-3" style={{ background: C.lightGray, border: `1px solid ${C.border}` }}>
+              <p className="text-sm font-bold mb-1" style={{ color: C.navy }}>📚 {s.sub}</p>
+              <p className="text-xs leading-relaxed" style={{ color: C.textMid }}>{s.res}</p>
             </div>
           ))}
         </div>
@@ -805,176 +611,50 @@ function BackgroundPanel() {
   );
 }
 
-// ─── Cost Calculator ──────────────────────────────────────────────────────────
-function CostCalculator() {
-  const totalCourses = plannedCourses.length;
-  const totalCredits = plannedCourses.reduce((s, c) => s + c.creditHours, 0);
-  const costPerCredit = 225;
-  const totalCost = totalCredits * costPerCredit;
-
+// ─── Overview ─────────────────────────────────────────────────────────────────
+function Overview({ onCourseClick }) {
   return (
-    <div className="rounded-xl p-6" style={{ background: C.navyDark, border: `1px solid ${C.gold}30` }}>
-      <div className="flex items-center gap-2 mb-5">
-        <Award size={18} color={C.buzzGold} />
-        <h3 className="font-bold" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-          Tuition Calculator
-        </h3>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: 'Courses', value: totalCourses, suffix: '' },
-          { label: 'Credit Hours', value: totalCredits, suffix: 'cr' },
-          { label: 'Rate', value: `$${costPerCredit}`, suffix: '/credit' },
-          { label: 'Estimated Total', value: `$${totalCost.toLocaleString()}`, suffix: '', highlight: true },
-        ].map((stat, i) => (
-          <div
-            key={i}
-            className="rounded-lg p-4 text-center"
-            style={{
-              background: stat.highlight ? `linear-gradient(135deg, ${C.gold}20 0%, ${C.buzzGold}15 100%)` : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${stat.highlight ? C.gold : 'rgba(255,255,255,0.1)'}`,
-            }}
-          >
-            <p className="text-2xl font-bold" style={{ color: stat.highlight ? C.buzzGold : C.white }}>
-              {stat.value}<span className="text-sm font-normal">{stat.suffix}</span>
-            </p>
-            <p className="text-xs mt-1" style={{ color: C.gray }}>{stat.label}</p>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs mt-4 text-center" style={{ color: C.gray }}>
-        * Estimated tuition only — does not include student fees. Rates subject to change.
-      </p>
-    </div>
-  );
-}
-
-// ─── Header / Hero ────────────────────────────────────────────────────────────
-function Header({ activeTab, setActiveTab }) {
-  const tabs = ['Overview', 'Timeline', 'Analytics', 'Risk Flags', 'Background'];
-  const completedCount = COURSES.filter(c => c.status === 'completed').length;
-  const inProgressCount = COURSES.filter(c => c.status === 'in-progress').length;
-
-  return (
-    <header className="sticky top-0 z-40 no-print" style={{ background: C.navy, borderBottom: `1px solid ${C.gold}30` }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-
-        {/* Top bar — only visible on initial load / overview */}
-        <div className="py-4 border-b" style={{ borderColor: `${C.gold}20` }}>
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center font-black text-sm"
-                style={{ background: C.buzzGold, color: C.navy, fontFamily: 'Georgia, serif' }}
-              >
-                GT
-              </div>
-              <div>
-                <h1 className="font-bold text-base leading-tight" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-                  OMSCS Journey
-                </h1>
-                <p className="text-xs" style={{ color: C.piMile }}>M.S. Computer Science — AI Specialization</p>
-              </div>
-            </div>
-
-            {/* Stats bar */}
-            <div className="flex items-center gap-4 flex-wrap">
-              {[
-                { label: 'Courses', value: plannedCourses.length },
-                { label: 'Credits', value: 30 },
-                { label: 'Completion', value: 'Summer 2028' },
-                { label: 'Est. Cost', value: '$6,750' },
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <p className="text-sm font-bold" style={{ color: C.buzzGold }}>{stat.value}</p>
-                  <p className="text-xs" style={{ color: C.gray }}>{stat.label}</p>
-                </div>
-              ))}
-              {(completedCount > 0 || inProgressCount > 0) && (
-                <div className="text-center">
-                  <p className="text-sm font-bold" style={{ color: C.teal }}>{completedCount}/{plannedCourses.length}</p>
-                  <p className="text-xs" style={{ color: C.gray }}>Done</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Nav tabs */}
-        <nav className="flex overflow-x-auto">
-          {tabs.map(tab => (
-            <button
-              key={tab}
-              className={`nav-tab px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${activeTab === tab ? 'active' : ''}`}
-              style={{
-                color: activeTab === tab ? C.buzzGold : C.piMile,
-                borderBottomColor: activeTab === tab ? C.buzzGold : 'transparent',
-              }}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-// ─── Overview Panel ───────────────────────────────────────────────────────────
-function OverviewPanel({ onCourseClick }) {
-  return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Disclaimer */}
-      <div className="rounded-xl p-4" style={{ background: `${C.boldBlue}15`, border: `1px solid ${C.boldBlue}40` }}>
-        <div className="flex items-start gap-2">
-          <Info size={16} color={C.boldBlue} className="flex-shrink-0 mt-0.5" />
-          <p className="text-sm" style={{ color: C.piMile }}>
-            <span className="font-semibold text-white">Difficulty ratings adjusted for IT-background student.</span>{' '}
-            Raw OMSCentral community ratings shown separately in each course detail. Click any course card for the full breakdown.
-          </p>
-        </div>
+      <div className="card p-4 flex items-start gap-3" style={{ borderLeft:`3px solid ${C.blue}` }}>
+        <Info size={16} color={C.blue} className="flex-shrink-0 mt-0.5" />
+        <p className="text-sm" style={{ color: C.text }}>
+          <span className="font-bold" style={{ color: C.navy }}>Difficulty ratings adjusted for IT-background student.</span>{' '}
+          Raw OMSCentral community scores shown separately in each course detail. Click any course card for the full breakdown.
+        </p>
       </div>
 
-      {/* Quick summary timeline */}
+      {/* Semester overview rows */}
       <div>
-        <h2 className="text-xl font-bold mb-5" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-          Your Degree at a Glance
-        </h2>
-        <div className="space-y-3">
+        <h2 className="text-2xl font-bold mb-4" style={{ color: C.navy }}>Your Degree at a Glance</h2>
+        <div className="space-y-2">
           {SEMESTERS.map(sem => {
-            const courses = semesterCourses(sem.index);
-            const hours = totalHours(sem.index);
-            const isHeavy = hours > 25;
+            const courses = bySem(sem.index);
+            const hrs = semHours(sem.index);
+            const heavy = hrs > 25;
+            const mid = hrs >= 18;
+            const loadColor = heavy ? C.orange : mid ? C.buzz : C.teal;
             return (
-              <div
-                key={sem.index}
-                className="rounded-xl p-4 flex items-center gap-4 flex-wrap"
-                style={{ background: C.navyDark, border: `1px solid ${C.gold}20` }}
-              >
-                <div className="w-32 flex-shrink-0">
-                  <p className="text-sm font-bold" style={{ color: C.gold }}>{sem.label}</p>
-                  {sem.tag && (
-                    <span className="text-xs font-bold" style={{ color: sem.tagColor }}>{sem.tag}</span>
-                  )}
+              <div key={sem.index} className="card p-4 flex items-center gap-4 flex-wrap">
+                <div className="w-28 flex-shrink-0">
+                  <p className="text-sm font-bold" style={{ color: C.navy }}>{sem.label}</p>
+                  {sem.tag && <span className="text-xs font-bold" style={{ color: sem.tagColor }}>{sem.tag}</span>}
                 </div>
                 <div className="flex flex-wrap gap-2 flex-1">
                   {courses.map(c => (
-                    <button
-                      key={c.id}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-opacity hover:opacity-80"
-                      style={{ background: diffConfig(c.difficultyLabel).color + '25', color: C.white, border: `1px solid ${diffConfig(c.difficultyLabel).color}50` }}
-                      onClick={() => onCourseClick(c)}
-                    >
-                      <span>{c.shortName || c.name}</span>
-                      <DifficultyBadge label={c.difficultyLabel} />
+                    <button key={c.id}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all hover:shadow-md"
+                      style={{ background: C.lightGray, color: C.navy, border:`1px solid ${C.border}` }}
+                      onClick={() => onCourseClick(c)}>
+                      {c.shortName || c.name}
+                      <DiffBadge label={c.difficultyLabel} />
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 text-sm flex-shrink-0">
-                  <Clock size={13} color={isHeavy ? C.orange : C.piMile} />
-                  <span style={{ color: isHeavy ? C.orange : C.piMile }}>{hours} hrs/wk</span>
-                  {isHeavy && <AlertTriangle size={13} color={C.orange} />}
+                <div className="flex items-center gap-1.5 text-sm flex-shrink-0">
+                  <Clock size={13} color={loadColor} />
+                  <span className="font-semibold" style={{ color: loadColor }}>{hrs} hrs/wk</span>
+                  {heavy && <AlertTriangle size={13} color={C.orange} />}
                 </div>
               </div>
             );
@@ -982,88 +662,131 @@ function OverviewPanel({ onCourseClick }) {
         </div>
       </div>
 
-      <CostCalculator />
+      {/* Tuition calculator */}
+      <div className="card p-6" style={{ borderTop:`3px solid ${C.buzz}` }}>
+        <div className="flex items-center gap-2 mb-5">
+          <Award size={18} color={C.navy} />
+          <h3 className="font-bold text-lg" style={{ color: C.navy }}>Tuition Calculator</h3>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label:'Courses',        value:'10',      sub:'' },
+            { label:'Credit Hours',   value:'30',      sub:'cr' },
+            { label:'Rate',           value:'$225',    sub:'/credit' },
+            { label:'Estimated Total',value:'$6,750',  sub:'', highlight:true },
+          ].map((s,i) => (
+            <div key={i} className="rounded-xl p-4 text-center"
+              style={{ background: s.highlight ? C.navy : C.lightGray, border:`1px solid ${C.border}` }}>
+              <p className="text-2xl font-bold" style={{ color: s.highlight ? C.buzz : C.navy }}>
+                {s.value}<span className="text-sm font-normal">{s.sub}</span>
+              </p>
+              <p className="text-xs mt-1" style={{ color: s.highlight ? 'rgba(255,255,255,0.7)' : C.gray }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs mt-4 text-center" style={{ color: C.gray }}>
+          * Estimated tuition only — does not include student fees. Rates subject to change.
+        </p>
+      </div>
     </div>
   );
 }
 
-// ─── Timeline Panel ───────────────────────────────────────────────────────────
-function TimelinePanel({ onCourseClick }) {
-  const backupCourses = COURSES.filter(c => c.status === 'backup');
-
+// ─── Timeline ─────────────────────────────────────────────────────────────────
+function Timeline({ onCourseClick }) {
+  const backups = COURSES.filter(c => c.status === 'backup');
   return (
     <div className="space-y-8">
-      {/* Semester cards grid */}
       <div>
-        <h2 className="text-xl font-bold mb-5" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-          Semester Timeline
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {SEMESTERS.map(sem => (
-            <SemesterCard key={sem.index} semester={sem} onCourseClick={onCourseClick} />
-          ))}
+        <h2 className="text-2xl font-bold mb-1" style={{ color: C.navy }}>Semester Timeline</h2>
+        <p className="text-sm" style={{ color: C.textMid }}>Click any course card to open the full difficulty breakdown.</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        {SEMESTERS.map(sem => <SemCard key={sem.index} sem={sem} onCourseClick={onCourseClick} />)}
+      </div>
+      <div>
+        <h2 className="text-2xl font-bold mb-1" style={{ color: C.navy }}>Backup / Alternative Courses</h2>
+        <p className="text-sm mb-4" style={{ color: C.textMid }}>If a planned course doesn't run or you need a lighter load — these are proven options.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {backups.map(c => <CourseCard key={c.id} course={c} onClick={onCourseClick} />)}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Alternatives */}
-      <div>
-        <h2 className="text-xl font-bold mb-4" style={{ fontFamily: 'Georgia, serif', color: C.gold }}>
-          Backup / Alternative Courses
-        </h2>
-        <div className="rounded-xl p-4" style={{ background: C.navyDark, border: `1px solid ${C.gray}40` }}>
-          <p className="text-xs mb-4" style={{ color: C.gray }}>
-            These courses are your safety net. If a planned course doesn't run or you need a lighter semester, these are proven options.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {backupCourses.map(course => (
-              <CourseCard key={course.id} course={course} onClick={onCourseClick} />
+// ─── Header ───────────────────────────────────────────────────────────────────
+function Header({ tab, setTab }) {
+  const tabs = ['Overview','Timeline','Analytics','Risk Flags','Background'];
+  return (
+    <header className="sticky top-0 z-40 no-print" style={{ background: C.navy, boxShadow:'0 2px 12px rgba(0,0,0,0.18)' }}>
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex items-center justify-between py-3 border-b border-white/10">
+          {/* Logo + title */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center font-black text-sm flex-shrink-0"
+              style={{ background: C.buzz, color: C.navy, fontFamily:'Georgia, serif' }}>GT</div>
+            <div>
+              <h1 className="font-bold text-base leading-tight text-white" style={{ fontFamily:'Georgia, serif' }}>
+                OMSCS Journey
+              </h1>
+              <p className="text-xs" style={{ color:'rgba(255,255,255,0.55)' }}>M.S. Computer Science — AI Specialization</p>
+            </div>
+          </div>
+          {/* Stats */}
+          <div className="hidden sm:flex items-center gap-6">
+            {[['10','Courses'],['30','Credits'],['Summer 2028','Completion'],['$6,750','Est. Cost']].map(([v,l]) => (
+              <div key={l} className="text-right">
+                <p className="text-sm font-bold" style={{ color: C.buzz }}>{v}</p>
+                <p className="text-xs" style={{ color:'rgba(255,255,255,0.45)' }}>{l}</p>
+              </div>
             ))}
           </div>
         </div>
+        {/* Nav */}
+        <nav className="flex">
+          {tabs.map(t => (
+            <button key={t} className={`nav-tab ${tab===t?'active':''}`} onClick={() => setTab(t)}>{t}</button>
+          ))}
+        </nav>
       </div>
-    </div>
+    </header>
   );
 }
 
-// ─── Root App ─────────────────────────────────────────────────────────────────
+// ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [activeTab, setActiveTab] = useState('Overview');
-  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [tab, setTab] = useState('Overview');
+  const [modal, setModal] = useState(null);
 
-  const handleCourseClick = (course) => setSelectedCourse(course);
-  const handleModalClose = () => setSelectedCourse(null);
-
-  const tabContent = {
-    'Overview':   <OverviewPanel onCourseClick={handleCourseClick} />,
-    'Timeline':   <TimelinePanel onCourseClick={handleCourseClick} />,
-    'Analytics':  <AnalyticsDashboard />,
-    'Risk Flags': <RiskFlagsPanel onCourseClick={handleCourseClick} />,
-    'Background': <BackgroundPanel />,
+  const panels = {
+    'Overview':   <Overview   onCourseClick={setModal} />,
+    'Timeline':   <Timeline   onCourseClick={setModal} />,
+    'Analytics':  <Analytics />,
+    'Risk Flags': <RiskFlags  onCourseClick={setModal} />,
+    'Background': <Background />,
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: C.navy }}>
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div style={{ minHeight:'100vh', background:'#f4f4f4' }}>
+      <Header tab={tab} setTab={setTab} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 fade-up">
-        {tabContent[activeTab]}
+        {panels[tab]}
       </main>
 
-      {/* Footer */}
-      <footer className="mt-16 border-t py-8" style={{ borderColor: `${C.gold}20` }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <footer className="mt-12 border-t py-8" style={{ borderColor: '#e2e8f0', background: C.white }}>
+        <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs" style={{ color: C.gray }}>
             <p>Data sourced from OMSCentral, Reddit r/OMSCS, and GT course offering history PDF (Spring 2026).</p>
             <p className="text-center">Difficulty ratings are personalized estimates for an IT-background student and may differ from community averages.</p>
-            <p className="text-right">Course availability not guaranteed — check omscs.gatech.edu before registering. <br /><span style={{ color: C.gold }}>Last updated: May 2026</span></p>
+            <p className="text-right">Course availability not guaranteed — check omscs.gatech.edu before registering.
+              <br /><span style={{ color: C.gold }}>Last updated: May 2026</span></p>
           </div>
         </div>
       </footer>
 
-      {/* Course Detail Modal */}
-      {selectedCourse && (
-        <CourseDetailModal course={selectedCourse} onClose={handleModalClose} />
-      )}
+      {modal && <CourseModal course={modal} onClose={() => setModal(null)} />}
     </div>
   );
 }
