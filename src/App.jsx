@@ -470,16 +470,16 @@ function Analytics() {
 // ── Risk Flags ─────────────────────────────────────────────────────────────────
 function RiskFlags({ onCourseClick }) {
   const flags = [
-    { id: 'CS6601', level: 'high', title: 'CS6601: Budget 30+ hrs/wk in Summer 2027', noLink: false,
-      note: 'This is statistically the hardest course in OMSCS. You are correctly taking it alone in summer. Budget 30 or more hours per week for the first four weeks. If you are struggling after week 3, drop early and protect your GPA.' },
-    { id: 'CS6150', level: 'high', title: 'CS6150: Computing for Good has a spotty schedule',
-      note: 'Only offered about 6 times across 12 semesters. Has disappeared from the schedule before with no warning. Keep CS6261 or CS6250 ready as drop-in substitutes for Fall 2027.' },
-    { id: 'CS8803-O23', level: 'medium', title: 'CS8803-O23: Modern Internet Research Methods is newer',
-      note: 'Only 4 semesters of offering history. A Fall pattern has been observed but is not guaranteed. Verify availability well before Fall 2027 registration opens.' },
-    { id: 'PUBP8823', level: 'medium', title: 'PUBP8823: Geopolitics of Cybersecurity is newer',
-      note: 'Only 4 semesters since its Spring 2023 debut. Spring availability looks consistent but there is not enough data to be confident. Have a backup elective ready for Spring 2028.' },
-    { id: 'CS6300', level: 'medium', title: 'CS6300: Java and Android needed before Fall 2026', noLink: false,
-      note: 'Software Development Process requires Android and Java development. If you are not comfortable with Java, spend a few weeks on it before the semester starts. Being the team lead on the group project is strongly recommended.' },
+    { id: 'CS6675', level: 'high', title: 'CS6675: Worst-rated course in this degree plan',
+      note: 'Community rating is 1.67 out of 5 (3 reviews) and only 4% of RateMyProfessors respondents would take it again. Primary issues: AI detection tool flags legitimate student work, Professor Liu has refused appeals in documented cases, and rubrics are vague with 6 to 8 single-spaced pages due weekly. Your networking background helps with the content but not the administrative friction. Seriously consider substituting CS6261 (Security Incident Response, perfect IT fit) or CS6250 (Computer Networks, genuinely easy for you) as your finale instead.' },
+    { id: 'CS6150', level: 'high', title: 'CS6150: Spring-only course placed in Spring 2028',
+      note: 'Research confirmed CS6150 is Spring-only (Spring 2023, 2024, 2025, 2026 confirmed; no Fall or Summer offerings found). It has been correctly moved to Spring 2028 in this plan. It also runs sporadically (about 6 times in 12 semesters) and has a 2.5 out of 5 community rating. Keep CS6261 or CS6250 ready as drop-in substitutes.' },
+    { id: 'CS6601', level: 'high', title: 'CS6601: Budget 30 to 40 hrs/wk in Summer 2027',
+      note: 'Community difficulty is 4.06 out of 5. Assignment 1 alone takes 30 to 70+ hours. Each exam window requires 15 to 40 hours. Taking it solo in summer is the right call. If you are struggling after week 3, drop early and protect your GPA.' },
+    { id: 'PUBP8823', level: 'medium', title: 'PUBP8823: Workload depends entirely on the instructor',
+      note: 'Professor Lindsay teaches a 5 hours per week version with rich discussions. Other instructors have been reported at 40 hours per week for the same course. Research confirmed this is one of the most instructor-dependent courses in OMSCS. Check who is teaching before registering for Fall 2027.' },
+    { id: 'CS8803-O23', level: 'medium', title: 'CS8803-O23: No public reviews exist yet',
+      note: 'Launched Fall 2024 with only 8 to 15 students per semester. Zero reviews on OMSCentral or OMSHub. Assumed workload and difficulty are unverified. Your networking background aligns well with the content but validate availability before Fall 2027 registration.' },
   ];
 
   const styles = {
